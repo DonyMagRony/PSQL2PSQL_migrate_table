@@ -1,60 +1,38 @@
+
+Copy
 # README: Data Migration with Celery and PostgreSQL
 
 ## **Project Overview**
 This project facilitates **asynchronous data migration** between two **PostgreSQL databases** using **Celery**. The system is designed for **parallel batch processing** and leverages **Redis** as a message broker. Multiple **Celery workers** handle data migration efficiently.
 
+---
+
 ## **Setup and Running the Project**
 
 ### **1. Build and Start the Containers**
 To build the Docker images, run:
-```sh
+```bash
 docker-compose build
-```
+block ended and simple text started 
+Then, start the services in detached mode:
 
-Then, start the services:
-```sh
 docker-compose up -d
-```
-
 This will initialize the following services:
-- **source_db** (PostgreSQL - source database)
-- **dest_db** (PostgreSQL - destination database)
-- **redis** (Message Broker for Celery tasks)
-- **worker** (Celery worker instances for parallel processing)
-- **scheduler** (Task scheduler to manage batch execution)
 
-### **2. Alternative Startup Method (Using PyCharm Services)**
-If using **PyCharm**, navigate to **Services** and manually start the `scheduler` and `worker` containers.
+source_db (PostgreSQL - source database)
 
-### **3. Debugging & Monitoring**
+dest_db (PostgreSQL - destination database)
 
-#### **Check Batch Metadata for Errors**
-If a batch fails, inspect the `batch_metadata` table in the **source database**:
-```sql
-SELECT * FROM batch_metadata WHERE status = 'failed';
-```
+redis (Message Broker for Celery tasks)
 
-#### **Manually Retry a Failed Batch**
-To retry failed batches, execute the following command inside the worker container:
-```sh
+worker (Celery worker instances for parallel processing)
+
+scheduler (Task scheduler to manage batch execution)
+
+2. Alternative Startup Method (Using PyCharm Services)
+If using PyCharm, navigate to Services and manually start the scheduler and worker containers.
+
+Manually Retry a Failed Batch
+To retry failed batches, execute this command inside the worker container:
+
 docker exec -it pythonproject-worker-1 python retry_retriable.py
-```
-
-This will trigger a retry mechanism for batches marked as **retriable**.
-
-## **Additional Information**
-- Ensure that the **worker logs** are checked for errors:  
-  ```sh
-  docker logs -f pythonproject-worker-1
-  ```
-- To stop all services, use:
-  ```sh
-  docker-compose down
-  ```
-- To clean up all containers and volumes:
-  ```sh
-  docker-compose down -v
-  ```
-
-For further details, refer to the project documentation or reach out via **GitHub Issues**. 🚀
-

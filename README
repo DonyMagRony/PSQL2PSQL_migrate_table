@@ -1,36 +1,68 @@
-# README: Data Migration with Celery and PostgreSQL
+' =============================================
+' Data Migration System (Celery & PostgreSQL)
+' =============================================
 
-## **Project Overview**
-This project facilitates **asynchronous data migration** between two **PostgreSQL databases** using **Celery**. The system is designed for **parallel batch processing** and leverages **Redis** as a message broker. Multiple **Celery workers** handle data migration efficiently.
+''' <summary>
+''' Project Overview:
+''' - Asynchronously migrates data between PostgreSQL databases
+''' - Uses Celery workers for parallel batch processing
+''' - Redis as message broker
+''' </summary>
 
----
+Module SetupInstructions
 
-## **Setup and Running the Project**
+    ''' <summary>
+    ''' STEP 1: Build and start containers
+    ''' </summary>
+    Sub Main()
+        ' Build Docker images
+        Shell("docker-compose build")
+        
+        ' Start services in detached mode
+        Shell("docker-compose up -d")
+        
+        ' Services initialized:
+        ' - source_db (PostgreSQL source)
+        ' - dest_db (PostgreSQL destination) 
+        ' - redis (Message Broker)
+        ' - worker (Celery workers)
+        ' - scheduler (Batch scheduler)
+    End Sub
 
-### **1. Build and Start the Containers**
-To build the Docker images, run:
-```bash
-docker-compose build
-block ended and simple text started 
-Then, start the services in detached mode:
+End Module
 
-docker-compose up -d
-This will initialize the following services:
+' =============================================
+' Debugging & Maintenance
+' =============================================
 
-source_db (PostgreSQL - source database)
+''' <summary>
+''' Check failed batches in source database
+''' </summary>
+Public Sub CheckFailedBatches()
+    Const query As String = "SELECT * FROM batch_metadata WHERE status = 'failed';"
+    ' Execute in PostgreSQL:
+    ' docker exec -it source_db psql -U postgres -d sourcedb -c query
+End Sub
 
-dest_db (PostgreSQL - destination database)
+''' <summary>
+''' Retry failed batches manually
+''' </summary>
+Public Sub RetryBatches()
+    ' Run retry script in worker container
+    Shell("docker exec -it pythonproject-worker-1 python retry_retriable.py")
+End Sub
 
-redis (Message Broker for Celery tasks)
+' =============================================
+' Common Commands
+' =============================================
 
-worker (Celery worker instances for parallel processing)
-
-scheduler (Task scheduler to manage batch execution)
-
-2. Alternative Startup Method (Using PyCharm Services)
-If using PyCharm, navigate to Services and manually start the scheduler and worker containers.
-
-Manually Retry a Failed Batch
-To retry failed batches, execute this command inside the worker container:
-
-docker exec -it pythonproject-worker-1 python retry_retriable.py
+Public Class Commands
+    ' View worker logs
+    Public Const ViewLogs As String = "docker logs -f pythonproject-worker-1"
+    
+    ' Stop all services
+    Public Const StopServices As String = "docker-compose down"
+    
+    ' Full cleanup
+    Public Const Cleanup As String = "docker-compose down -v"
+End Class

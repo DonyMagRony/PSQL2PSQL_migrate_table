@@ -1,35 +1,60 @@
 # README: Data Migration with Celery and PostgreSQL
 
 ## **Project Overview**
-This project uses **Celery** to process batches of data from a **source PostgreSQL database** to a **destination PostgreSQL database** asynchronously.
-It utilizes **Redis** as a message broker and supports **parallel processing** with multiple worker instances.
+This project facilitates **asynchronous data migration** between two **PostgreSQL databases** using **Celery**. The system is designed for **parallel batch processing** and leverages **Redis** as a message broker. Multiple **Celery workers** handle data migration efficiently.
 
 ## **Setup and Running the Project**
 
 ### **1. Build and Start the Containers**
-Run the following command to build the Docker images:
+To build the Docker images, run:
 ```sh
 docker-compose build
 ```
+
 Then, start the services:
 ```sh
 docker-compose up -d
 ```
-This will start:
-- `source_db` (PostgreSQL)
-- `dest_db` (PostgreSQL)
-- `redis` (Message Broker)
-- `worker` (Celery worker instances)
-- `scheduler` (Task scheduler for processing batches)
 
-### **2. Alternative Way to Start (PyCharm Services)**
-If using **PyCharm**, navigate to **Services** and start `scheduler` and `worker` containers manually.
+This will initialize the following services:
+- **source_db** (PostgreSQL - source database)
+- **dest_db** (PostgreSQL - destination database)
+- **redis** (Message Broker for Celery tasks)
+- **worker** (Celery worker instances for parallel processing)
+- **scheduler** (Task scheduler to manage batch execution)
+
+### **2. Alternative Startup Method (Using PyCharm Services)**
+If using **PyCharm**, navigate to **Services** and manually start the `scheduler` and `worker` containers.
 
 ### **3. Debugging & Monitoring**
-#### **Check the batch metadata table for errors**
-If a batch fails, you can inspect the `batch_metadata` table in the **source database**:
+
+#### **Check Batch Metadata for Errors**
+If a batch fails, inspect the `batch_metadata` table in the **source database**:
 ```sql
-SELECT * FROM batch_metadata;
+SELECT * FROM batch_metadata WHERE status = 'failed';
 ```
+
 #### **Manually Retry a Failed Batch**
+To retry failed batches, execute the following command inside the worker container:
+```sh
 docker exec -it pythonproject-worker-1 python retry_retriable.py
+```
+
+This will trigger a retry mechanism for batches marked as **retriable**.
+
+## **Additional Information**
+- Ensure that the **worker logs** are checked for errors:  
+  ```sh
+  docker logs -f pythonproject-worker-1
+  ```
+- To stop all services, use:
+  ```sh
+  docker-compose down
+  ```
+- To clean up all containers and volumes:
+  ```sh
+  docker-compose down -v
+  ```
+
+For further details, refer to the project documentation or reach out via **GitHub Issues**. 🚀
+

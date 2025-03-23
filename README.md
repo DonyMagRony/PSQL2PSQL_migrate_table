@@ -21,6 +21,7 @@ This will start:
 - `redis` (Message Broker)
 - `worker` (Celery worker instances)
 - `scheduler` (Task scheduler for processing batches)
+- `validation` (validation)
 
 ###  Alternative Way to Start (PyCharm Services)**
 If using **PyCharm**, navigate to **Services** and start `scheduler` and `worker` containers manually.

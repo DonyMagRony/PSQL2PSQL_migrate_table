@@ -2,13 +2,13 @@ CREATE TABLE recommendation (
     id SERIAL PRIMARY KEY,
     user_id INT,
     product_id INT,
+    score NUMERIC(5,4),
     created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE batch_metadata (
     batch_id SERIAL PRIMARY KEY,
-    start_id INT,
-    end_id INT,
+    user_ids INTEGER[],          -- Array of user IDs
     status VARCHAR(20) DEFAULT 'pending',
     started_at TIMESTAMP,
     completed_at TIMESTAMP,
@@ -18,18 +18,31 @@ CREATE TABLE batch_metadata (
 -- Function to insert data in batches
 DO $$
 DECLARE
-    total_records INT := 1000000;  -- Total records to insert
-    batch_size INT := 100000;     -- Records per batch
+    total_users INT := 1000000;  -- 1M users
+    recs_per_user INT := 100;    -- 100 recs per user
+    users_per_batch INT := 10000; -- 10K users/batch → 100K recs/batch
     current_batch INT := 0;
 BEGIN
-    WHILE current_batch * batch_size < total_records LOOP
-        INSERT INTO recommendation (user_id, product_id)
+    FOR current_batch IN 0..(total_users/users_per_batch - 1) LOOP
+        INSERT INTO recommendation (user_id, product_id, score)
         SELECT
-            (random() * 1000000)::int AS user_id,  -- Random user_id between 1 and 1,000,000
-            (random() * 100)::int AS product_id     -- Random product_id between 1 and 100
-        FROM generate_series(1, batch_size);
+            user_id,
+            (random() * 100)::int AS product_id,
+            (random() * 1)::NUMERIC(5,4) AS score
+        FROM
+            generate_series(
+                current_batch * users_per_batch + 1,
+                (current_batch + 1) * users_per_batch
+            ) AS user_id
+        CROSS JOIN generate_series(1, recs_per_user);
 
-        current_batch := current_batch + 1;
-        RAISE NOTICE 'Inserted batch %: % records', current_batch, batch_size;
+        RAISE NOTICE 'Inserted batch %: users %-% → % records',
+            current_batch + 1,
+            current_batch * users_per_batch + 1,
+            (current_batch + 1) * users_per_batch,
+            users_per_batch * recs_per_user;
     END LOOP;
 END $$;
+
+
+CREATE INDEX recommendation_user_id_idx ON recommendation (user_id);

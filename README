@@ -32,14 +32,4 @@ If a batch fails, you can inspect the `batch_metadata` table in the **source dat
 SELECT * FROM batch_metadata;
 ```
 #### **Manually Retry a Failed Batch**
-To manually retry a failed batch, enter the worker container:
-```sh
-docker exec -it <worker_container_id> /bin/bash
-```
-Then open Python shell and enqueue the task manually:
-```python
-from worker import process_batch
-process_batch.delay(<batch_id>, <start_id>, <end_id>)
-```
-SELECT MD5(string_agg(t::text, '')) FROM (SELECT * FROM source_table ORDER BY id) t;
-SELECT MD5(string_agg(t::text, '')) FROM (SELECT * FROM dest_table ORDER BY id) t;
+docker exec -it pythonproject-worker-1 python retry_retriable.py

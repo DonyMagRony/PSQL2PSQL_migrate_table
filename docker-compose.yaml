@@ -6,6 +6,12 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=500"
+      - "-c"
+      - "shared_buffers=2GB"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
@@ -28,8 +34,13 @@ services:
 
   worker:
     build: .
-    command: celery -A worker worker --loglevel=info
-#    --concurrency=4
+    command:
+      - celery
+      - -A
+      - worker.app
+      - worker
+      - --loglevel=info
+      - --concurrency=4
     environment:
       SOURCE_DB_URL: postgresql://postgres:postgres@source_db:5432/postgres
       DEST_DB_URL: postgresql://postgres:postgres@dest_db:5432/postgres
@@ -46,11 +57,21 @@ services:
     command: python scheduler.py
     environment:
       SOURCE_DB_URL: postgresql://postgres:postgres@source_db:5432/postgres
+      DEST_DB_URL: postgresql://postgres:postgres@dest_db:5432/postgres
       REDIS_URL: redis://redis:6379/0
     depends_on:
       - source_db
       - redis
 
+  validator:
+    build: .
+    command: python validate.py
+    environment:
+      SOURCE_DB_URL: postgresql://postgres:postgres@source_db:5432/postgres
+      DEST_DB_URL: postgresql://postgres:postgres@dest_db:5432/postgres
+    depends_on:
+      - source_db
+      - dest_db
 volumes:
   source_data:
   dest_data:

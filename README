@@ -1,0 +1,45 @@
+# README: Data Migration with Celery and PostgreSQL
+
+## **Project Overview**
+This project uses **Celery** to process batches of data from a **source PostgreSQL database** to a **destination PostgreSQL database** asynchronously.
+It utilizes **Redis** as a message broker and supports **parallel processing** with multiple worker instances.
+
+## **Setup and Running the Project**
+
+### **1. Build and Start the Containers**
+Run the following command to build the Docker images:
+```sh
+docker-compose build
+```
+Then, start the services:
+```sh
+docker-compose up -d
+```
+This will start:
+- `source_db` (PostgreSQL)
+- `dest_db` (PostgreSQL)
+- `redis` (Message Broker)
+- `worker` (Celery worker instances)
+- `scheduler` (Task scheduler for processing batches)
+
+### **2. Alternative Way to Start (PyCharm Services)**
+If using **PyCharm**, navigate to **Services** and start `scheduler` and `worker` containers manually.
+
+### **3. Debugging & Monitoring**
+#### **Check the batch metadata table for errors**
+If a batch fails, you can inspect the `batch_metadata` table in the **source database**:
+```sql
+SELECT * FROM batch_metadata;
+```
+#### **Manually Retry a Failed Batch**
+To manually retry a failed batch, enter the worker container:
+```sh
+docker exec -it <worker_container_id> /bin/bash
+```
+Then open Python shell and enqueue the task manually:
+```python
+from worker import process_batch
+process_batch.delay(<batch_id>, <start_id>, <end_id>)
+```
+SELECT MD5(string_agg(t::text, '')) FROM (SELECT * FROM source_table ORDER BY id) t;
+SELECT MD5(string_agg(t::text, '')) FROM (SELECT * FROM dest_table ORDER BY id) t;
